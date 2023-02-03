@@ -1,0 +1,80 @@
+DECLARE @CloneInfo NVARCHAR(3750)
+  SELECT @CloneInfo =
+    (
+    SELECT @SQLClone_ImageName AS "Name", @SQLClone_MachineName AS "MachineName",
+      @SQLClone_UserName AS "User", GetDate() AS "Modified",
+      @SQLClone_OriginDatabaseName AS "DatabaseName"
+    FOR JSON PATH
+    );
+  IF not EXISTS
+    (SELECT name, value  FROM fn_listextendedproperty(
+       N'SQL_Clone_Image_Info',default, default, default, default, default, default) )
+      EXEC sys.sp_addextendedproperty @name=N' SQL_Clone_Image_Info', @value=@CloneInfo
+  ELSE
+    EXEC sys.sp_Updateextendedproperty  @name=N'SQL_Clone_Image_Info', @value=@CloneInfo
+
+ "Image" = @{# this has the details of the image that each clone uses as its base
+          #we use these details to create an image of what we built
+          'Name' = "$($database)image"; #This is the name we want to call the image 
+          'Modifications' = @("$($env:USERPROFILE)\Clone\imageModificationScript.sql") 
+          'ServerURL' = 'http://MySQLCloneServer:14145'; #the HTTP address of the Clone Server
+          'ImageDirectoryURL'='\\MySQLCloneServer\Clone' #the URL of the image directory
+      }
+
+Declare @CloneInfo NVARCHAR(3750) 
+  SELECT @CloneInfo = (
+    SELECT * FROM (Select
+      @SQLClone_CloneName, 
+      @SQLClone_MachineName, 
+      @SQLClone_UserName,
+      GetDate()
+    )f(CloneName, MachineName, UserName, Created) FOR JSON auto );
+  IF not EXISTS
+    (SELECT name, value  FROM fn_listextendedproperty(
+       N'SQL_Clone_clone_Info',default, default, default, default, default, default) )
+      EXEC sys.sp_addextendedproperty @name=N'SQL_Clone_clone_Info', @value=@CloneInfo
+  ELSE
+    EXEC sys.sp_Updateextendedproperty  @name=N'SQL_Clone_clone_Info', @value=@CloneInfo
+
+"Image" = @{# this has the details of the image that each clone uses as its base
+          #we use these details to create an image of what we built
+          'Name' = "$($database)image"; #This is the name we want to call the image 
+          'Modifications' = @("$($env:USERPROFILE)\Clone\imageModificationScript.sql")
+          'ServerURL' = 'http://MySQLCloneServer:14145'; #the HTTP address of the Clone Server
+          'ImageDirectoryURL'='\\MyImageServer\Clone' #the URL of the image directory
+          'CloneTemplates'=@{
+                              'DatabaseProperties'="$($env:USERPROFILE)\Clone\CloneModificationScript.sql"
+                              }
+
+  "Clones" = @(
+      @{
+        "NetName" = " MySQLCloneServer ";#the network name of the server
+        'Modifications' = 'DatabaseProperties'; #the name of the template to run
+        "Database" = "$($database)Ours";#the name of the Database
+        'username' = 'MyId';#leave this blank for windows security
+        'Original' = $false}#is this the original
+
+Declare @CloneInfo NVARCHAR(3750) 
+  SELECT @CloneInfo = (
+    SELECT * FROM (Select
+      SYSTEM_USER, 
+      db_name(), 
+      App_Name(),
+      GetDate()
+    )f(SystemUser, [Database], [Application], Created) FOR JSON auto );
+  IF not EXISTS
+    (SELECT name, value  FROM fn_listextendedproperty(
+       N'Extra_Info',default, default, default, default, default, default) )
+      EXEC sys.sp_addextendedproperty @name=N'Extra_Info', @value=@CloneInfo
+  ELSE
+    EXEC sys.sp_Updateextendedproperty  @name=N'Extra_Info', @value=@CloneInfo
+
+"Clones" = @(
+      @{
+        "NetName" = " MySQLCloneServer ";#the network name of the server
+        'Modifications' = 'DatabaseProperties'; #the name of the template to run
+        "Database" = "$($database)Ours"; #the name of the Database
+        "AdditionalScripts"="@($($env:USERPROFILE)\Clone\ServerModificationScript.sql";
+        'username' = 'PhilFactor'; #leave this blank for windows security
+        'Original' = $false} #is this the original
+

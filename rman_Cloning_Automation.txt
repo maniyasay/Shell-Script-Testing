@@ -1,0 +1,48 @@
+RMAN> RESTORE DATABASE PREVIEW SUMMARY;
+
+Starting restore at 16-MAY-11
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=488 device type=DISK
+allocated channel: ORA_DISK_2
+channel ORA_DISK_2: SID=585 device type=DISK
+allocated channel: ORA_DISK_3
+channel ORA_DISK_3: SID=680 device type=DISK
+allocated channel: ORA_DISK_4
+channel ORA_DISK_4: SID=966 device type=DISK
+
+RMAN> RESTORE DATABASE PREVIEW;
+
+Starting restore at 17-MAY-11
+using channel ORA_DISK_1
+using channel ORA_DISK_2
+using channel ORA_DISK_3
+using channel ORA_DISK_4
+
+bs_stamp 
+bs_count 
+
+SET_STAMP
+SET_COUNT
+SELECT BP.RECID,
+  BP.STAMP,
+  BP.RECID,
+  BS.RECID,
+  BP.SET_STAMP,
+  BP.SET_COUNT,
+  PIECE#,
+  COPY#,
+  STATUS,
+  BP.COMPLETION_TIME,
+  HANDLE,
+  BS.CONTROLFILE_INCLUDED,
+  BS.BACKUP_TYPE,
+  TAG,
+  DEVICE_TYPE,
+  MEDIA,
+  BYTES,
+  COMPRESSED
+FROM V$BACKUP_PIECE BP,
+  V$BACKUP_SET BS
+WHERE HANDLE IS NOT NULL
+AND BS.SET_STAMP   = BP.SET_STAMP
+AND BS.SET_COUNT   = BP.SET_COUNT;
